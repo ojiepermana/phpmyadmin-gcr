@@ -1,5 +1,5 @@
 <?php
-$cfg['blowfish_secret'] = '72937429sdfsf7s98f8s9f7s9f9sf6f9s8'; // Set this to a secret passphrase
+$cfg['blowfish_secret'] = '72937429sdfsf7s98f8sss9f7s9f9sf6f9s8'; // Set this to a secret passphrase
 
 /**
  * Servers configuration
