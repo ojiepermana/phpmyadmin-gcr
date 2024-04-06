@@ -21,6 +21,7 @@ RUN wget https://files.phpmyadmin.net/phpMyAdmin/${PMA_VERSION}/phpMyAdmin-${PMA
     && rm phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz
 
 # Copy config file for phpMyAdmin
+# Ensure that config.inc.php is in the same directory as your Dockerfile
 COPY config.inc.php /var/www/html/config.inc.php
 
 # Change ownership of the files to the nginx user
