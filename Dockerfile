@@ -1,25 +1,33 @@
-# Use an official PHP 8.3 runtime with FPM
-FROM php:8.3-fpm
+# Use the PHP 8.3 FPM image from the official PHP Docker Hub repository
+FROM php:8.3-fpm-alpine
 
 # Install Nginx
-RUN apt-get update && apt-get install -y nginx
+RUN apk add --no-cache nginx
 
-# Install phpMyAdmin
-ENV PHPMYADMIN_VERSION 5.1.1
-RUN set -ex; \
-    curl -o phpmyadmin.tar.gz -fSL "https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VERSION}/phpMyAdmin-${PHPMYADMIN_VERSION}-all-languages.tar.gz"; \
-    tar -xzf phpmyadmin.tar.gz -C /var/www/html --strip-components=1; \
-    rm phpmyadmin.tar.gz; \
-    chown -R www-data:www-data /var/www/html
-
-# Copy Nginx and PHP-FPM configuration files
+# Configure Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY config.inc.php /var/www/html/
 
-# Forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-    && ln -sf /dev/stderr /var/log/nginx/error.log
+# Install necessary PHP extensions
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# Start Nginx and PHP-FPM
-CMD service php8.3-fpm start && nginx -g 'daemon off;'
+# Set up working directory
+WORKDIR /var/www/html
+
+# Download and install phpMyAdmin
+ARG PMA_VERSION=5.1.1
+RUN wget https://files.phpmyadmin.net/phpMyAdmin/${PMA_VERSION}/phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz \
+    && tar xzf phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz \
+    && mv phpMyAdmin-${PMA_VERSION}-all-languages/* /var/www/html \
+    && rm phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz
+
+# Copy config file for phpMyAdmin
+COPY config.inc.php /var/www/html/config.inc.php
+
+# Change ownership of the files to the nginx user
+RUN chown -R nginx:nginx /var/www/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx and PHP-FPM services
+CMD ["sh", "-c", "php-fpm & nginx -g 'daemon off;'"]
